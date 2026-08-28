@@ -1,0 +1,15 @@
+[Unit]
+Description=ReefRecon UI web app
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/ReefRecon_UI
+Environment=REEF_RECON_DIR=/home/pi/reef-recon
+ExecStart=/home/pi/ReefRecon_UI/venv/bin/python3 app.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

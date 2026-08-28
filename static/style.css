@@ -61,6 +61,11 @@ button {
   color: #2b0906;
 }
 
+#update-btn {
+  background: #3a6ea5;
+  color: #eaf1fb;
+}
+
 button:disabled {
   opacity: 0.5;
   cursor: default;

@@ -6,9 +6,6 @@ const recordingStatusEl = document.getElementById("recording-status");
 const recordingStartBtn = document.getElementById("recording-start-btn");
 const recordingStopBtn = document.getElementById("recording-stop-btn");
 
-const updateBtn = document.getElementById("update-btn");
-const updateStatusEl = document.getElementById("update-status");
-
 const errorBanner = document.getElementById("error-banner");
 
 function showError(message) {
@@ -92,48 +89,6 @@ recordingStopBtn.addEventListener("click", () => {
   recordingStopBtn.disabled = true;
   call("/api/recording/stop", (data) => renderRecording(data.active));
 });
-
-updateBtn.addEventListener("click", async () => {
-  updateBtn.disabled = true;
-  updateStatusEl.textContent = "Checking for updates…";
-  try {
-    const res = await fetch("/api/update", { method: "POST" });
-    const data = await res.json();
-    if (data.error) {
-      showError(data.error);
-      updateStatusEl.textContent = "Update failed";
-      updateBtn.disabled = false;
-      return;
-    }
-    if (data.restarting) {
-      updateStatusEl.textContent = "Updated — restarting…";
-      waitForRestart();
-    } else {
-      updateStatusEl.textContent = "Already up to date";
-      updateBtn.disabled = false;
-    }
-  } catch (err) {
-    showError("Can't reach the Pi");
-    updateBtn.disabled = false;
-  }
-});
-
-function waitForRestart() {
-  const check = async () => {
-    try {
-      const res = await fetch("/api/playback/status");
-      if (res.ok) {
-        updateStatusEl.textContent = "Back online — reloading…";
-        location.reload();
-        return;
-      }
-    } catch (err) {
-      // still restarting, keep polling
-    }
-    setTimeout(check, 1000);
-  };
-  setTimeout(check, 1000);
-}
 
 refreshPlaybackStatus();
 refreshRecordingStatus();

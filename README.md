@@ -8,8 +8,6 @@ either — it just shells out the same commands you'd type manually:
 - **Test tone**: runs `aplay ... white_noise_0dbfs_peak.wav` inside
   `reef-recon`.
 - **Recording**: runs `sudo systemctl start/stop reef-recon`.
-- **Update**: runs `git pull` on this repo and restarts itself, so
-  changes pushed to GitHub show up without SSHing back into the Pi.
 
 ## Setup on the Pi
 
@@ -41,37 +39,25 @@ either — it just shells out the same commands you'd type manually:
    which systemctl   # usually /usr/bin/systemctl or /bin/systemctl
    ```
 
-   Then run `sudo visudo` and add this line at the end (replace
-   `pi` with whichever user will run the app, and the path with
-   whatever `which systemctl` printed):
+   Then add a sudoers drop-in (no editor navigation needed):
 
-   ```
-   pi ALL=(ALL) NOPASSWD: /usr/bin/systemctl start reef-recon, /usr/bin/systemctl stop reef-recon, /usr/bin/systemctl is-active reef-recon
+   ```bash
+   echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start reef-recon, /usr/bin/systemctl stop reef-recon, /usr/bin/systemctl is-active reef-recon" | sudo tee /etc/sudoers.d/reefrecon-ui
+   sudo chmod 0440 /etc/sudoers.d/reefrecon-ui
+   sudo visudo -c
    ```
 
    This grants passwordless sudo for exactly those three commands on
    exactly that service — nothing broader.
 
-4. Install the app itself as a systemd service, so it survives reboots
-   and SSH disconnects, and so **Check for updates** actually works
-   (see note below on why this is required, not optional):
+4. Run the app:
 
    ```bash
-   sudo cp deploy/reefrecon-ui.service /etc/systemd/system/
-   sudo nano /etc/systemd/system/reefrecon-ui.service   # fix User/paths for your setup
-   sudo systemctl daemon-reload
-   sudo systemctl enable --now reefrecon-ui
+   source venv/bin/activate   # if not already active
+   python3 app.py
    ```
 
-   Check it started cleanly:
-
-   ```bash
-   sudo systemctl status reefrecon-ui
-   journalctl -u reefrecon-ui -f   # live logs, Ctrl+C to exit
-   ```
-
-   From now on you never need to run `python3 app.py` by hand — the
-   service starts it on boot and restarts it if it ever exits.
+   You should see it start on `http://0.0.0.0:5000`.
 
 ## Using it from your phone
 
@@ -92,27 +78,30 @@ either — it just shells out the same commands you'd type manually:
 
    Tap **Stop** to kill the playback early.
 
-6. Under **App**, tap **Check for updates** to `git pull` the latest
-   pushed changes and restart automatically. The page reloads itself
-   once the app is back online (usually a couple seconds).
-
 If any action fails (missing file, bad ALSA device, sudoers not set up,
-a `git pull` conflict, etc.) the error message appears directly in the
-UI instead of only in the terminal.
+etc.) the error message appears directly in the UI instead of only in
+the terminal.
 
-### A note on self-update
+## Optional: run as a systemd service
 
-`git pull` only fast-forwards — if you've made local edits directly on
-the Pi (not recommended) it will fail with a clear error instead of
-overwriting them.
+Running `python3 app.py` directly means the app dies when you close
+the SSH session or reboot the Pi. If you want it to survive both and
+restart automatically on a crash, `deploy/reefrecon-ui.service` is
+provided:
 
-**The systemd service in step 4 is required for the Update button to
-work**, not just a nice-to-have: after pulling, the app exits on
-purpose (`os._exit`) so the new code gets loaded on the next start.
-Something has to actually restart the process — that's what
-`Restart=always` in `reefrecon-ui.service` does, a couple seconds
-later once the port is free. If you instead run `python3 app.py`
-directly in a terminal, hitting Update will just kill it and you'll
-be back to typing commands over SSH to bring it back up.
+```bash
+sudo cp deploy/reefrecon-ui.service /etc/systemd/system/
+sudo nano /etc/systemd/system/reefrecon-ui.service   # fix User/paths for your setup
+sudo systemctl daemon-reload
+sudo systemctl enable --now reefrecon-ui
+```
+
+```bash
+sudo systemctl status reefrecon-ui
+journalctl -u reefrecon-ui -f   # live logs, Ctrl+C to exit
+```
+
+This is entirely optional — everything above works fine with a plain
+`python3 app.py` in a terminal too.
 
 This is intentionally minimal as a starting point to build on.

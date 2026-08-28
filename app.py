@@ -6,8 +6,6 @@ Independent controls:
     (unmodified) as a subprocess, for a quick speaker check.
   - Recording: starts/stops the `reef-recon` systemd service that does
     the actual recording.
-  - Update: `git pull`s this repo and restarts itself, so new code
-    pushed to GitHub can be picked up without SSHing back into the Pi.
 
 Exposed over a small web UI so it can be controlled from a phone
 browser on the same network (e.g. a hotspot), instead of SSHing in.
@@ -163,33 +161,6 @@ def recording_stop():
         error = result.stderr.strip() or result.stdout.strip() or "Failed to stop recording"
         return jsonify(active=True, error=error), 500
     return jsonify(active=False)
-
-
-def _restart():
-    # Let the HTTP response for this request go out first, then exit.
-    # Relies on the app being run as a systemd service with
-    # `Restart=always` (see deploy/reefrecon-ui.service) so it comes
-    # back up automatically once the port is free — re-exec'ing in
-    # place isn't safe here since Werkzeug's listening socket survives
-    # exec and blocks the new process from rebinding it.
-    time.sleep(0.5)
-    os._exit(0)
-
-
-@app.route("/api/update", methods=["POST"])
-def update():
-    result = subprocess.run(
-        ["git", "pull", "--ff-only"], cwd=APP_DIR, capture_output=True, text=True,
-    )
-    output = (result.stdout + result.stderr).strip()
-    if result.returncode != 0:
-        return jsonify(error=output or "git pull failed"), 500
-
-    if "Already up to date" in result.stdout:
-        return jsonify(output=output, restarting=False)
-
-    threading.Thread(target=_restart, daemon=True).start()
-    return jsonify(output=output, restarting=True)
 
 
 if __name__ == "__main__":

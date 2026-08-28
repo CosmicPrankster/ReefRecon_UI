@@ -22,11 +22,8 @@ app = Flask(__name__)
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Path to the existing reef-recon checkout on the Pi. Override with the
-# REEF_RECON_DIR environment variable if it's not a sibling of this repo.
-REEF_RECON_DIR = os.environ.get(
-    "REEF_RECON_DIR",
-    os.path.join(APP_DIR, "..", "reef-recon"),
-)
+# REEF_RECON_DIR environment variable if it lives somewhere else.
+REEF_RECON_DIR = os.environ.get("REEF_RECON_DIR", "/home/reefrecon/reef-recon")
 
 # Equivalent to: cd reef-recon && aplay -D hw:CARD=sndrpihifiberry,DEV=0 tests/example_recordings/white_noise_0dbfs_peak.wav
 PLAY_CMD = [

@@ -11,16 +11,11 @@ either — it just shells out the same commands you'd type manually:
 
 ## Setup on the Pi
 
-1. Clone/copy this repo onto the Pi, e.g. as a sibling of `reef-recon`:
-
-   ```
-   ~/reef-recon
-   ~/ReefRecon_UI
-   ```
-
-   If it lives somewhere else, set the `REEF_RECON_DIR` environment
-   variable to the full path of your `reef-recon` checkout before
-   starting the app.
+1. Clone/copy this repo onto the Pi. `app.py` defaults to looking for
+   `reef-recon` at `/home/reefrecon/reef-recon`. If yours lives
+   somewhere else, either edit `REEF_RECON_DIR` at the top of `app.py`
+   directly, or set the `REEF_RECON_DIR` environment variable to the
+   full path before starting the app (the env var takes precedence).
 
 2. Install dependencies (one-time):
 

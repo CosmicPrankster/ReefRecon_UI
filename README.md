@@ -1,10 +1,13 @@
 # ReefRecon UI
 
-A minimal web app that lets you play/stop an audio test track on the Pi
-from your phone's browser, instead of SSHing in and typing the command
-by hand. It runs alongside the existing `reef-recon` repo without
-touching anything in it — it just shells out to `aplay` the same way you
-do manually.
+A minimal web app that lets you control the Pi from your phone's
+browser instead of SSHing in and typing commands by hand. It runs
+alongside the existing `reef-recon` repo/service without touching
+either — it just shells out the same commands you'd type manually:
+
+- **Test tone**: runs `aplay ... white_noise_0dbfs_peak.wav` inside
+  `reef-recon`.
+- **Recording**: runs `sudo systemctl start/stop reef-recon`.
 
 ## Setup on the Pi
 
@@ -37,6 +40,25 @@ do manually.
 
    You should see it start on `http://0.0.0.0:5000`.
 
+4. Allow the app to start/stop the `reef-recon` service without a sudo
+   password prompt (the web app has no terminal to type one into).
+   Find the full path to `systemctl` first:
+
+   ```bash
+   which systemctl   # usually /usr/bin/systemctl or /bin/systemctl
+   ```
+
+   Then run `sudo visudo` and add this line at the end (replace
+   `pi` with whichever user runs `python3 app.py`, and the path with
+   whatever `which systemctl` printed):
+
+   ```
+   pi ALL=(ALL) NOPASSWD: /usr/bin/systemctl start reef-recon, /usr/bin/systemctl stop reef-recon, /usr/bin/systemctl is-active reef-recon
+   ```
+
+   This grants passwordless sudo for exactly those three commands on
+   exactly that service — nothing broader.
+
 ## Using it from your phone
 
 1. Connect both the Pi and your phone to the same personal hotspot
@@ -44,7 +66,10 @@ do manually.
 2. Find the Pi's IP address on that network (e.g. `hostname -I` on the
    Pi).
 3. On your phone, open a browser and go to `http://<pi-ip>:5000`.
-4. Tap **Play white noise** to run:
+4. Under **Recording**, tap **Start recording** / **Stop recording** to
+   run `sudo systemctl start/stop reef-recon`. The status line shows
+   whether it's currently recording (polled every 2s).
+5. Under **Test tone**, tap **Play white noise** to run:
 
    ```bash
    cd reef-recon
@@ -53,5 +78,8 @@ do manually.
 
    Tap **Stop** to kill the playback early.
 
-This is intentionally minimal — one command, one button — as a starting
-point to build on.
+If either action fails (missing file, bad ALSA device, sudoers not set
+up, etc.) the error message appears directly in the UI instead of only
+in the terminal.
+
+This is intentionally minimal as a starting point to build on.

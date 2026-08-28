@@ -15,12 +15,24 @@ main {
 
 h1 {
   font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+h2 {
+  font-size: 1rem;
+  color: #9fc4d1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
 }
 
-#status {
+section p {
   color: #9fc4d1;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .buttons {
@@ -37,11 +49,13 @@ button {
   cursor: pointer;
 }
 
+#recording-start-btn,
 #play-btn {
   background: #2ecc71;
   color: #04210f;
 }
 
+#recording-stop-btn,
 #stop-btn {
   background: #e74c3c;
   color: #2b0906;
@@ -50,4 +64,18 @@ button {
 button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.error {
+  background: #3a1414;
+  color: #ffb4a8;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  word-break: break-word;
+  font-size: 0.9rem;
+}
+
+.hidden {
+  display: none;
 }

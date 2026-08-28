@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReefRecon</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>ReefRecon</h1>
+    <p id="status">Checking status&hellip;</p>
+    <div class="buttons">
+      <button id="play-btn">Play white noise</button>
+      <button id="stop-btn">Stop</button>
+    </div>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+body {
+  font-family: -apple-system, system-ui, sans-serif;
+  background: #0b1620;
+  color: #e6f1f5;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+main {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+#status {
+  color: #9fc4d1;
+  margin-bottom: 1.5rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  flex: 1;
+  padding: 1.25rem 0;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+#play-btn {
+  background: #2ecc71;
+  color: #04210f;
+}
+
+#stop-btn {
+  background: #e74c3c;
+  color: #2b0906;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

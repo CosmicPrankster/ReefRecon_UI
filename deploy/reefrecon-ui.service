@@ -4,10 +4,9 @@ After=network.target sound.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/ReefRecon_UI
-Environment=REEF_RECON_DIR=/home/pi/reef-recon
-ExecStart=/home/pi/ReefRecon_UI/venv/bin/python3 app.py
+User=reefrecon
+WorkingDirectory=/home/reefrecon/ReefRecon_UI
+ExecStart=/home/reefrecon/ReefRecon_UI/venv/bin/python3 app.py
 Restart=always
 RestartSec=2
 

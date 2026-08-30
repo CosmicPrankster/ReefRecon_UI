@@ -79,17 +79,22 @@ the terminal.
 
 ## Optional: run as a systemd service
 
-Running `python3 app.py` directly means the app dies when you close
-the SSH session or reboot the Pi. If you want it to survive both and
-restart automatically on a crash, `deploy/reefrecon-ui.service` is
-provided:
+Running `python3 app.py` directly means the app dies the moment your
+SSH session ends — including just closing your laptop lid, which
+drops the connection. If you want it to keep running regardless (and
+restart automatically if it ever crashes, and start on boot),
+`deploy/reefrecon-ui.service` is provided, already configured for this
+Pi's user/paths:
 
 ```bash
 sudo cp deploy/reefrecon-ui.service /etc/systemd/system/
-sudo nano /etc/systemd/system/reefrecon-ui.service   # fix User/paths for your setup
 sudo systemctl daemon-reload
 sudo systemctl enable --now reefrecon-ui
 ```
+
+(If your username or clone path is ever different from
+`reefrecon`/`~/ReefRecon_UI`, edit `User=` and the two paths in the
+`.service` file before copying it, then `daemon-reload` again.)
 
 ```bash
 sudo systemctl status reefrecon-ui

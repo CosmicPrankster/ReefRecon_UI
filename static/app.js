@@ -1,8 +1,10 @@
 const playbackStatusEl = document.getElementById("playback-status");
+const playbackDot = document.getElementById("playback-dot");
 const playBtn = document.getElementById("play-btn");
 const stopBtn = document.getElementById("stop-btn");
 
 const recordingStatusEl = document.getElementById("recording-status");
+const recordingDot = document.getElementById("recording-dot");
 const recordingStartBtn = document.getElementById("recording-start-btn");
 const recordingStopBtn = document.getElementById("recording-stop-btn");
 
@@ -12,6 +14,7 @@ const presetLabels = {};
 presetButtons.forEach((btn) => { presetLabels[btn.dataset.preset] = btn.textContent; });
 
 const diagnosticStatusEl = document.getElementById("diagnostic-status");
+const diagnosticDot = document.getElementById("diagnostic-dot");
 const diagnosticOnBtn = document.getElementById("diagnostic-on-btn");
 const diagnosticOffBtn = document.getElementById("diagnostic-off-btn");
 
@@ -32,12 +35,16 @@ function showError(message) {
 
 function renderPlayback(playing) {
   playbackStatusEl.textContent = playing ? "Playing…" : "Stopped";
+  playbackDot.classList.toggle("on", playing);
+  playbackDot.classList.toggle("off", !playing);
   playBtn.disabled = playing;
   stopBtn.disabled = !playing;
 }
 
 function renderRecording(active) {
   recordingStatusEl.textContent = active ? "Recording" : "Not recording";
+  recordingDot.classList.toggle("on", active);
+  recordingDot.classList.toggle("off", !active);
   recordingStartBtn.disabled = active;
   recordingStopBtn.disabled = !active;
 }
@@ -54,6 +61,8 @@ function renderPresets(active, busy) {
 
 function renderDiagnostic(active) {
   diagnosticStatusEl.textContent = active ? "Diagnostic mode ON" : "Diagnostic mode OFF";
+  diagnosticDot.classList.toggle("on", active);
+  diagnosticDot.classList.toggle("off", !active);
   diagnosticOnBtn.disabled = active;
   diagnosticOffBtn.disabled = !active;
 }

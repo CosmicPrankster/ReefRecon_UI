@@ -8,52 +8,83 @@
 </head>
 <body>
   <main>
-    <h1>ReefRecon</h1>
+    <header class="hero">
+      <h1>Reef&#8209;Recon</h1>
+      <p class="tagline">Pi Control Panel</p>
+    </header>
 
-    <section>
-      <h2>Recording</h2>
-      <p id="recording-status">Checking status&hellip;</p>
+    <svg class="reef-band" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="400" height="28" fill="var(--ice)"/>
+      <ellipse cx="18" cy="8" rx="16" ry="6" fill="var(--navy-700)" transform="rotate(-10 18 8)"/>
+      <ellipse cx="55" cy="18" rx="12" ry="5" fill="var(--gold)" transform="rotate(8 55 18)"/>
+      <ellipse cx="92" cy="6" rx="20" ry="7" fill="var(--blue)" transform="rotate(-5 92 6)"/>
+      <ellipse cx="130" cy="20" rx="14" ry="5" fill="var(--navy-700)" transform="rotate(12 130 20)"/>
+      <ellipse cx="168" cy="9" rx="18" ry="6" fill="var(--blue-light)" transform="rotate(-8 168 9)"/>
+      <ellipse cx="205" cy="19" rx="13" ry="5" fill="var(--gold)" transform="rotate(6 205 19)"/>
+      <ellipse cx="240" cy="7" rx="17" ry="6" fill="var(--navy-700)" transform="rotate(-12 240 7)"/>
+      <ellipse cx="278" cy="18" rx="15" ry="6" fill="var(--blue)" transform="rotate(9 278 18)"/>
+      <ellipse cx="315" cy="8" rx="19" ry="7" fill="var(--blue-light)" transform="rotate(-6 315 8)"/>
+      <ellipse cx="352" cy="19" rx="14" ry="5" fill="var(--gold)" transform="rotate(10 352 19)"/>
+      <ellipse cx="386" cy="7" rx="16" ry="6" fill="var(--navy-700)" transform="rotate(-9 386 7)"/>
+    </svg>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Recording</h2>
+        <span id="recording-dot" class="dot"></span>
+      </div>
+      <p id="recording-status" class="status-line">Checking status&hellip;</p>
       <div class="buttons">
-        <button id="recording-start-btn" disabled>Start recording</button>
-        <button id="recording-stop-btn" disabled>Stop recording</button>
+        <button id="recording-start-btn" class="btn-go" disabled>Start recording</button>
+        <button id="recording-stop-btn" class="btn-stop" disabled>Stop recording</button>
       </div>
     </section>
 
-    <section>
-      <h2>Test tone</h2>
-      <p id="playback-status">Checking status&hellip;</p>
+    <section class="card">
+      <div class="card-head">
+        <h2>Test Tone</h2>
+        <span id="playback-dot" class="dot"></span>
+      </div>
+      <p id="playback-status" class="status-line">Checking status&hellip;</p>
       <div class="buttons">
-        <button id="play-btn" disabled>Play white noise</button>
-        <button id="stop-btn" disabled>Stop</button>
+        <button id="play-btn" class="btn-go" disabled>Play white noise</button>
+        <button id="stop-btn" class="btn-stop" disabled>Stop</button>
       </div>
     </section>
 
-    <section>
-      <h2>Noise Filter Preset</h2>
-      <p id="preset-status">Checking status&hellip;</p>
+    <section class="card">
+      <div class="card-head">
+        <h2>Noise Filter Preset</h2>
+      </div>
+      <p id="preset-status" class="status-line">Checking status&hellip;</p>
       <div class="buttons preset-grid">
-        <button data-preset="balanced" disabled>Balanced</button>
-        <button data-preset="noise_hunter" disabled>Noise Hunter</button>
-        <button data-preset="sensitive" disabled>Sensitive</button>
-        <button data-preset="low_freq_focus" disabled>Low Freq Focus</button>
-        <button data-preset="shrimp_focus" disabled>Shrimp Focus</button>
+        <button data-preset="balanced" class="btn-neutral" disabled>Balanced</button>
+        <button data-preset="noise_hunter" class="btn-neutral" disabled>Noise Hunter</button>
+        <button data-preset="sensitive" class="btn-neutral" disabled>Sensitive</button>
+        <button data-preset="low_freq_focus" class="btn-neutral" disabled>Low Freq Focus</button>
+        <button data-preset="shrimp_focus" class="btn-neutral" disabled>Shrimp Focus</button>
       </div>
     </section>
 
-    <section>
-      <h2>Diagnostic Mode</h2>
-      <p id="diagnostic-status">Checking status&hellip;</p>
+    <section class="card">
+      <div class="card-head">
+        <h2>Diagnostic Mode</h2>
+        <span id="diagnostic-dot" class="dot"></span>
+      </div>
+      <p id="diagnostic-status" class="status-line">Checking status&hellip;</p>
       <div class="buttons">
-        <button id="diagnostic-on-btn" disabled>Enable</button>
-        <button id="diagnostic-off-btn" disabled>Disable</button>
+        <button id="diagnostic-on-btn" class="btn-go" disabled>Enable</button>
+        <button id="diagnostic-off-btn" class="btn-stop" disabled>Disable</button>
       </div>
     </section>
 
-    <section>
-      <h2>Maintenance</h2>
-      <p id="reset-status">&nbsp;</p>
+    <section class="card card-danger">
+      <div class="card-head">
+        <h2>Maintenance</h2>
+      </div>
+      <p id="reset-status" class="status-line">&nbsp;</p>
       <div class="buttons">
-        <button id="reset-btn" class="danger">Reset to defaults</button>
+        <button id="reset-btn" class="btn-danger">Reset to defaults</button>
       </div>
     </section>
 

@@ -8,6 +8,24 @@ either — it just shells out the same commands you'd type manually:
 - **Test tone**: runs `aplay ... white_noise_0dbfs_peak.wav` inside
   `reef-recon`.
 - **Recording**: runs `sudo systemctl start/stop reef-recon`.
+- **Presets**: switches the 4 `USER_PARAMS` knobs in reef-recon's
+  `parameters.json` between 5 named combinations (Balanced, Noise
+  Hunter, Sensitive, Low Freq Focus, Shrimp Focus). Every other field
+  in that file — including `USER_PARAM_PRESETS`, reef-recon's own
+  lookup table — is read and written back untouched.
+- **Diagnostic Mode**: toggles `ENABLE_INPUT_AGC` and
+  `ENABLE_SPECTRAL_WHITENING` off/on in `parameters.json`, for
+  listening to clean/unprocessed audio during a diagnostic dive.
+- **Reset to defaults**: runs reef-recon's own
+  `sudo ./scripts/install-pi-service.sh --enable --start`, which
+  reinstalls its systemd unit and resets `parameters.json` to factory
+  defaults.
+
+Presets, Diagnostic Mode, and Reset to defaults all restart the
+`reef-recon` service if (and only if) it's already recording, so the
+new settings take effect immediately without surprise-starting a
+recording that wasn't running. Reset to defaults is the one exception
+— `--start` always starts it, matching the command as given.
 
 ## Setup on the Pi
 
@@ -26,24 +44,35 @@ either — it just shells out the same commands you'd type manually:
    pip install -r requirements.txt
    ```
 
-3. Allow the app to start/stop the `reef-recon` service without a sudo
+3. Allow the app to control `reef-recon` and its config without a sudo
    password prompt (the web app has no terminal to type one into).
-   Find the full path to `systemctl` first:
+   Find the full paths first:
 
    ```bash
-   which systemctl   # usually /usr/bin/systemctl or /bin/systemctl
+   which systemctl cat tee   # confirm these paths before pasting below
    ```
 
-   Then add a sudoers drop-in (no editor navigation needed):
+   Then add a sudoers drop-in (no editor navigation needed — adjust
+   any path below that didn't match what `which` printed, and the
+   `reef-recon` path if your checkout isn't at
+   `/home/reefrecon/reef-recon`):
 
    ```bash
-   echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start reef-recon, /usr/bin/systemctl stop reef-recon, /usr/bin/systemctl is-active reef-recon" | sudo tee /etc/sudoers.d/reefrecon-ui
+   echo "$(whoami) ALL=(ALL) NOPASSWD: \
+   /usr/bin/systemctl start reef-recon, \
+   /usr/bin/systemctl stop reef-recon, \
+   /usr/bin/systemctl is-active reef-recon, \
+   /usr/bin/cat /opt/reef-recon/etc/parameters.json, \
+   /usr/bin/tee /opt/reef-recon/etc/parameters.json, \
+   /home/reefrecon/reef-recon/scripts/install-pi-service.sh --enable --start" \
+   | sudo tee /etc/sudoers.d/reefrecon-ui
    sudo chmod 0440 /etc/sudoers.d/reefrecon-ui
    sudo visudo -c
    ```
 
-   This grants passwordless sudo for exactly those three commands on
-   exactly that service — nothing broader.
+   This grants passwordless sudo for exactly those commands — nothing
+   broader. (The multi-line `\` continuations above are just for
+   readability; `visudo -c` will tell you if anything didn't parse.)
 
 4. Run the app:
 
@@ -72,6 +101,19 @@ either — it just shells out the same commands you'd type manually:
    ```
 
    Tap **Stop** to kill the playback early.
+
+6. Under **Noise Filter Preset**, tap any of the 5 presets to rewrite
+   `USER_PARAMS` in `parameters.json` to that combination. The status
+   line shows which preset (if any) matches the file's current
+   values — "Custom" means it was edited manually and doesn't match
+   any of the 5.
+7. Under **Diagnostic Mode**, tap **Enable**/**Disable** to flip
+   `ENABLE_INPUT_AGC` and `ENABLE_SPECTRAL_WHITENING` off/on for a
+   diagnostic dive.
+8. Under **Maintenance**, tap **Reset to defaults** to run
+   reef-recon's own `install-pi-service.sh --enable --start`. This
+   asks for confirmation first since it resets `parameters.json` and
+   always starts a recording, even if one wasn't running.
 
 If any action fails (missing file, bad ALSA device, sudoers not set up,
 etc.) the error message appears directly in the UI instead of only in

@@ -28,6 +28,35 @@
       </div>
     </section>
 
+    <section>
+      <h2>Noise Filter Preset</h2>
+      <p id="preset-status">Checking status&hellip;</p>
+      <div class="buttons preset-grid">
+        <button data-preset="balanced" disabled>Balanced</button>
+        <button data-preset="noise_hunter" disabled>Noise Hunter</button>
+        <button data-preset="sensitive" disabled>Sensitive</button>
+        <button data-preset="low_freq_focus" disabled>Low Freq Focus</button>
+        <button data-preset="shrimp_focus" disabled>Shrimp Focus</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Diagnostic Mode</h2>
+      <p id="diagnostic-status">Checking status&hellip;</p>
+      <div class="buttons">
+        <button id="diagnostic-on-btn" disabled>Enable</button>
+        <button id="diagnostic-off-btn" disabled>Disable</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Maintenance</h2>
+      <p id="reset-status">&nbsp;</p>
+      <div class="buttons">
+        <button id="reset-btn" class="danger">Reset to defaults</button>
+      </div>
+    </section>
+
     <p id="error-banner" class="error hidden"></p>
   </main>
   <script src="{{ url_for('static', filename='app.js') }}"></script>

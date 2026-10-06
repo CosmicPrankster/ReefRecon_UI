@@ -50,20 +50,55 @@ button {
 }
 
 #recording-start-btn,
-#play-btn {
+#play-btn,
+#diagnostic-on-btn {
   background: #2ecc71;
   color: #04210f;
 }
 
 #recording-stop-btn,
-#stop-btn {
+#stop-btn,
+#diagnostic-off-btn {
   background: #e74c3c;
   color: #2b0906;
+}
+
+.danger {
+  background: #7a1f1f;
+  color: #ffd9d3;
 }
 
 button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.preset-grid button {
+  flex: unset;
+  background: #1f3a52;
+  color: #cfe8f5;
+  font-size: 0.95rem;
+  padding: 1rem 0.5rem;
+}
+
+.preset-grid button:last-child {
+  grid-column: 1 / -1;
+}
+
+.preset-grid button.active {
+  background: #3a6ea5;
+  color: #eaf1fb;
+  box-shadow: 0 0 0 2px #7fb8e0 inset;
+}
+
+.preset-grid button.active:disabled {
+  opacity: 1;
 }
 
 .error {

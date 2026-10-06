@@ -6,10 +6,19 @@ Independent controls:
     (unmodified) as a subprocess, for a quick speaker check.
   - Recording: starts/stops the `reef-recon` systemd service that does
     the actual recording.
+  - Presets: switches the 4 USER_PARAMS knobs in reef-recon's
+    parameters.json between 5 named combinations, leaving every other
+    field in that file untouched.
+  - Diagnostic mode: toggles ENABLE_INPUT_AGC and
+    ENABLE_SPECTRAL_WHITENING off/on for a "clean" diagnostic dive.
+  - Reset to defaults: runs reef-recon's own
+    scripts/install-pi-service.sh --enable --start, which reinstalls
+    its systemd unit and resets parameters.json to factory defaults.
 
 Exposed over a small web UI so it can be controlled from a phone
 browser on the same network (e.g. a hotspot), instead of SSHing in.
 """
+import json
 import os
 import subprocess
 import threading
@@ -36,6 +45,65 @@ WAV_PATH = os.path.join(REEF_RECON_DIR, "tests/example_recordings/white_noise_0d
 # systemd unit that runs the actual recording. Starting/stopping it
 # requires root, see README for the required passwordless-sudo setup.
 RECORDING_SERVICE = "reef-recon"
+
+# reef-recon's own config file. Only the 4 USER_PARAMS fields below are
+# ever touched; everything else (including USER_PARAM_PRESETS, which
+# is reef-recon's internal lookup table from these LOW/MED/HIGH labels
+# to actual DSP values) is read and written back untouched. Reading
+# and writing it requires root, see README for the sudoers setup.
+PARAMETERS_PATH = "/opt/reef-recon/etc/parameters.json"
+
+PRESETS = {
+    "balanced": {
+        "SNAPPING_SHRIMP_SUPPRESSION": "MED",
+        "LOW_FREQUENCY_SUPPRESSION": "MED",
+        "TRANSIENT_DETECTION_SENSITIVITY": "MED",
+        "HARMONIC_DETECTION_SENSITIVITY": "MED",
+    },
+    "noise_hunter": {
+        "SNAPPING_SHRIMP_SUPPRESSION": "HIGH",
+        "LOW_FREQUENCY_SUPPRESSION": "HIGH",
+        "TRANSIENT_DETECTION_SENSITIVITY": "LOW",
+        "HARMONIC_DETECTION_SENSITIVITY": "LOW",
+    },
+    "sensitive": {
+        "SNAPPING_SHRIMP_SUPPRESSION": "LOW",
+        "LOW_FREQUENCY_SUPPRESSION": "LOW",
+        "TRANSIENT_DETECTION_SENSITIVITY": "HIGH",
+        "HARMONIC_DETECTION_SENSITIVITY": "HIGH",
+    },
+    "low_freq_focus": {
+        "SNAPPING_SHRIMP_SUPPRESSION": "HIGH",
+        "LOW_FREQUENCY_SUPPRESSION": "LOW",
+        "TRANSIENT_DETECTION_SENSITIVITY": "MED",
+        "HARMONIC_DETECTION_SENSITIVITY": "MED",
+    },
+    "shrimp_focus": {
+        "SNAPPING_SHRIMP_SUPPRESSION": "LOW",
+        "LOW_FREQUENCY_SUPPRESSION": "HIGH",
+        "TRANSIENT_DETECTION_SENSITIVITY": "HIGH",
+        "HARMONIC_DETECTION_SENSITIVITY": "MED",
+    },
+}
+
+PRESET_LABELS = {
+    "balanced": "Balanced",
+    "noise_hunter": "Noise Hunter",
+    "sensitive": "Sensitive",
+    "low_freq_focus": "Low Freq Focus",
+    "shrimp_focus": "Shrimp Focus",
+}
+
+# Script reef-recon itself provides to reinstall its systemd unit and
+# reset parameters.json to factory defaults. Run exactly as given
+# (sudo ./scripts/install-pi-service.sh --enable --start from within
+# the repo), requires root, see README for the sudoers setup.
+INSTALL_SCRIPT = os.path.join(REEF_RECON_DIR, "scripts", "install-pi-service.sh")
+
+# Fields toggled for a "diagnostic dive" (clean, unprocessed audio to
+# evaluate what the DSP stages are doing). True is reef-recon's normal
+# default for both; diagnostic mode flips them to False and back.
+DIAGNOSTIC_FIELDS = ["ENABLE_INPUT_AGC", "ENABLE_SPECTRAL_WHITENING"]
 
 _lock = threading.Lock()
 _proc = None  # currently running aplay subprocess, if any
@@ -158,6 +226,115 @@ def recording_stop():
         error = result.stderr.strip() or result.stdout.strip() or "Failed to stop recording"
         return jsonify(active=True, error=error), 500
     return jsonify(active=False)
+
+
+def _read_parameters():
+    result = subprocess.run(
+        ["sudo", "-n", "cat", PARAMETERS_PATH], capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or f"Failed to read {PARAMETERS_PATH}")
+    return json.loads(result.stdout)
+
+
+def _write_parameters(data):
+    result = subprocess.run(
+        ["sudo", "-n", "tee", PARAMETERS_PATH],
+        input=json.dumps(data, indent=2) + "\n",
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or f"Failed to write {PARAMETERS_PATH}")
+
+
+@app.route("/api/presets")
+def presets_list():
+    try:
+        current = _read_parameters().get("USER_PARAMS", {})
+    except (RuntimeError, ValueError) as exc:
+        return jsonify(error=str(exc)), 500
+
+    active = next((key for key, values in PRESETS.items() if values == current), None)
+    return jsonify(
+        presets=[{"id": key, "label": PRESET_LABELS[key]} for key in PRESETS],
+        active=active,
+        current=current,
+    )
+
+
+@app.route("/api/presets/<preset_id>", methods=["POST"])
+def presets_apply(preset_id):
+    if preset_id not in PRESETS:
+        return jsonify(error=f"Unknown preset '{preset_id}'"), 404
+
+    try:
+        data = _read_parameters()
+        data["USER_PARAMS"] = PRESETS[preset_id]
+        _write_parameters(data)
+    except (RuntimeError, ValueError) as exc:
+        return jsonify(error=str(exc)), 500
+
+    was_active = _systemctl("is-active").stdout.strip() == "active"
+    if was_active:
+        _systemctl("stop")
+        start_result = _systemctl("start")
+        if start_result.returncode != 0:
+            error = (
+                start_result.stderr.strip()
+                or "Applied preset, but failed to restart recording with it"
+            )
+            return jsonify(active=False, applied=preset_id, error=error), 500
+
+    return jsonify(active=was_active, applied=preset_id)
+
+
+@app.route("/api/reset-defaults", methods=["POST"])
+def reset_defaults():
+    result = subprocess.run(
+        ["sudo", "-n", INSTALL_SCRIPT, "--enable", "--start"],
+        cwd=REEF_RECON_DIR, capture_output=True, text=True,
+    )
+    output = (result.stdout + result.stderr).strip()
+    if result.returncode != 0:
+        return jsonify(error=output or "install-pi-service.sh failed"), 500
+    return jsonify(ok=True, output=output)
+
+
+@app.route("/api/diagnostic")
+def diagnostic_status():
+    try:
+        data = _read_parameters()
+    except (RuntimeError, ValueError) as exc:
+        return jsonify(error=str(exc)), 500
+    active = all(data.get(field) is False for field in DIAGNOSTIC_FIELDS)
+    return jsonify(active=active)
+
+
+@app.route("/api/diagnostic/<state>", methods=["POST"])
+def diagnostic_set(state):
+    if state not in ("on", "off"):
+        return jsonify(error=f"Unknown diagnostic state '{state}'"), 404
+
+    try:
+        data = _read_parameters()
+        for field in DIAGNOSTIC_FIELDS:
+            data[field] = (state == "off")
+        _write_parameters(data)
+    except (RuntimeError, ValueError) as exc:
+        return jsonify(error=str(exc)), 500
+
+    was_active = _systemctl("is-active").stdout.strip() == "active"
+    if was_active:
+        _systemctl("stop")
+        start_result = _systemctl("start")
+        if start_result.returncode != 0:
+            error = (
+                start_result.stderr.strip()
+                or "Changed diagnostic mode, but failed to restart recording with it"
+            )
+            return jsonify(active=False, diagnostic=(state == "on"), error=error), 500
+
+    return jsonify(active=was_active, diagnostic=(state == "on"))
 
 
 if __name__ == "__main__":
